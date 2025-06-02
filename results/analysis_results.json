@@ -1,0 +1,133 @@
+{
+    "central_contracts": {
+        "total_revenue": 10215.0,
+        "revenue_by_source": {
+            "Angel One": 82.0,
+            "Aramco": 0.0,
+            "CEAT": 0.0,
+            "JioCinema (Viacom18)": 4751.0,
+            "My11Circle": 125.0,
+            "RuPay": 42.0,
+            "Star Sports": 4715.0,
+            "Tata Group": 500.0,
+            "Wonder Cement": 0.0
+        },
+        "revenue_percentage": {
+            "Angel One": 0.8,
+            "Aramco": 0.0,
+            "CEAT": 0.0,
+            "JioCinema (Viacom18)": 46.51,
+            "My11Circle": 1.22,
+            "RuPay": 0.41,
+            "Star Sports": 46.16,
+            "Tata Group": 4.89,
+            "Wonder Cement": 0.0
+        }
+    },
+    "health_risk": [
+        {
+            "sno": 1,
+            "brand_name": "Vishnu Packaging (Vimal Elaichi)",
+            "product_type": "Pan Masala/Mouth Freshener",
+            "celebrity_name": "Shah Rukh Khan, Ajay Devgn, Akshay Kumar",
+            "celebrity_influence": "Extremely High",
+            "social_risk_description": "Extremely High - Carcinogenic (Surrogate Ads)",
+            "health_risk_index": 0.0
+        },
+        {
+            "sno": 2,
+            "brand_name": "Sporta Technologies (Dream11)",
+            "product_type": "Fantasy Gaming / Betting",
+            "celebrity_name": "Rohit Sharma, Aamir Khan, Ranbir Kapoor, Varun Dhawan, Hardik Pandya, others",
+            "celebrity_influence": "Very  High",
+            "social_risk_description": "Extremely High - Promotes Gambling",
+            "health_risk_index": 0.0
+        },
+        {
+            "sno": 3,
+            "brand_name": "Reliance Consumer Products",
+            "product_type": "FMCG / Beverages",
+            "celebrity_name": "multiple",
+            "celebrity_influence": "Medium",
+            "social_risk_description": "Moderate  (Sugar Content)",
+            "health_risk_index": 0.0
+        },
+        {
+            "sno": 4,
+            "brand_name": "My11Circle",
+            "product_type": "Fantasy Gaming / Betting",
+            "celebrity_name": "Sourav Ganguly, Shubman Gill, Mohammed Siraj, Ruturaj Gaikwad, Rinku Singh, Yashasvi Jaiswal",
+            "celebrity_influence": "High",
+            "social_risk_description": "Extremely High - Promotes Gambling",
+            "health_risk_index": 0.0
+        },
+        {
+            "sno": 5,
+            "brand_name": "Rajshree Silver Coated Elaichi",
+            "product_type": "Pan Masala/Mouth Freshener",
+            "celebrity_name": "Salman Khan",
+            "celebrity_influence": "Very  High",
+            "social_risk_description": "Carcinogenic (Surrogate Ads)",
+            "health_risk_index": 0.0
+        },
+        {
+            "sno": 6,
+            "brand_name": "Parle Biscuits",
+            "product_type": "FMCG (Biscuits & Snacks)",
+            "celebrity_name": "Ananya Panday, Lakshya (Hide & Seek)",
+            "celebrity_influence": "Moderate",
+            "social_risk_description": "Moderate  (Sugar Content)",
+            "health_risk_index": 0.0
+        },
+        {
+            "sno": 7,
+            "brand_name": "Kamla Pasand",
+            "product_type": "Pan Masala/Mouth Freshener",
+            "celebrity_name": "Virender Sehwag, Sunil Gavaskar (2025), previously Ranveer Singh, Amitabh Bachchan",
+            "celebrity_influence": "Very  High",
+            "social_risk_description": "Carcinogenic (Surrogate Ads)",
+            "health_risk_index": 0.0
+        },
+        {
+            "sno": 8,
+            "brand_name": "PokerBaazi",
+            "product_type": "Fantasy Gaming / Betting",
+            "celebrity_name": "Shahid Kapoor",
+            "celebrity_influence": "High",
+            "social_risk_description": "Extremely High - Promotes Gambling",
+            "health_risk_index": 0.0
+        },
+        {
+            "sno": 9,
+            "brand_name": "Britannia 50-50",
+            "product_type": "FMCG (Biscuits & Snacks)",
+            "celebrity_name": "multiple",
+            "celebrity_influence": "Medium",
+            "social_risk_description": "Moderate  (Sugar Content)",
+            "health_risk_index": 0.0
+        },
+        {
+            "sno": 10,
+            "brand_name": "Amazon Prime",
+            "product_type": "OTT/Entertainment",
+            "celebrity_name": "Varun Dhawan, Alia Bhatt",
+            "celebrity_influence": "High",
+            "social_risk_description": "Low ",
+            "health_risk_index": 0.0
+        }
+    ],
+    "cagr": {
+        "Vishnu Packaging (Vimal Elaichi)": 0.0,
+        "Sporta Technologies (Dream11)": 0.0,
+        "Reliance Consumer Products": 0.0,
+        "My11Circle": 0.0,
+        "Rajshree Silver Coated Elaichi": 0.0
+    },
+    "population_impact": {
+        "total_affected_population": 0.0,
+        "high_risk_brands_count": 0,
+        "average_risk_score": "NaN"
+    },
+    "celebrity_endorsements": [],
+    "aei": 55.0
+}

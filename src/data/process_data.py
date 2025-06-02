@@ -46,8 +46,16 @@ class DataProcessor:
         """Clean and process advertisers data."""
         df = self.processed_data['advertisers'].copy()
         
+        # Rename columns for consistency
+        df = df.rename(columns={
+            'advertiser_brand': 'brand_name',
+            'category': 'product_type',
+            'brand_ambassadors': 'celebrity_name',
+            'health_social_risk': 'social_risk_description'
+        })
+        
         # Add your data cleaning steps here
-        # Example: Remove duplicates, handle missing values, etc.
+        # Example: Handle missing values, etc.
         
         self.processed_data['advertisers_clean'] = df
         return df
@@ -56,37 +64,19 @@ class DataProcessor:
         """Calculate health/social risk index for advertisers."""
         df = self.processed_data['advertisers_clean'].copy()
         
-        # Define risk factors and their weights
-        risk_factors = {
-            'product_type': {
-                'pan_masala': 0.8,
-                'betting_app': 0.7,
-                'alcohol': 0.6,
-                'tobacco': 0.9,
-                'other': 0.2
-            },
-            'ad_frequency': {
-                'high': 0.8,
-                'medium': 0.5,
-                'low': 0.2
-            }
+        # Map qualitative risk descriptions to numerical scores
+        risk_mapping = {
+            'High': 90,
+            'Medium': 50,
+            'Low': 20,
+            'Very High': 100,
+            'Very Low': 10
         }
         
-        # Calculate risk index
-        df['health_risk_index'] = df.apply(
-            lambda row: self._calculate_risk_score(row, risk_factors),
-            axis=1
-        )
+        df['health_risk_index'] = df['social_risk_description'].map(risk_mapping).fillna(0)
         
         self.processed_data['advertisers_with_risk'] = df
         return df
-
-    def _calculate_risk_score(self, row, risk_factors):
-        """Helper function to calculate risk score for each advertiser."""
-        product_risk = risk_factors['product_type'].get(row['product_type'], 0.2)
-        frequency_risk = risk_factors['ad_frequency'].get(row['ad_frequency'], 0.5)
-        
-        return (product_risk * 0.7 + frequency_risk * 0.3) * 100
 
     def process_revenue_data(self):
         """Process revenue and contract data."""
@@ -94,6 +84,7 @@ class DataProcessor:
         contracts_df = self.processed_data['contracts'].copy()
         
         # Add your revenue processing logic here
+        # Example: Ensure consistent column names, data types, etc.
         
         self.processed_data['revenue_processed'] = revenue_df
         self.processed_data['contracts_processed'] = contracts_df
@@ -110,6 +101,14 @@ class DataProcessor:
         
         logger.info(f"Processed data saved to {output_dir}")
 
+def print_advertisers_columns():
+    try:
+        df = pd.read_excel("Dataset/fact_ipl_advertisers.xlsx")
+        print("Advertisers data columns:")
+        print(df.columns.tolist())
+    except Exception as e:
+        print(f"Error reading file: {e}")
+
 def main():
     processor = DataProcessor()
     
@@ -123,4 +122,5 @@ def main():
         logger.error("Data processing failed")
 
 if __name__ == "__main__":
-    main() 
+    main()
+    print_advertisers_columns() 
