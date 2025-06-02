@@ -2,23 +2,6 @@
 
 This project analyzes the economic and social impact of the Indian Premier League (IPL), focusing on advertising practices, revenue generation, and their implications on public health and society.
 
-## Project Structure
-
-```
-├── data/                      # Data directory
-│   ├── raw/                  # Original, immutable data
-│   └── processed/            # Cleaned and processed data
-├── notebooks/                # Jupyter notebooks for analysis
-├── src/                      # Source code
-│   ├── data/                # Data processing scripts
-│   ├── analysis/            # Analysis scripts
-│   ├── visualization/       # Visualization scripts
-│   └── dashboard/           # Streamlit dashboard code
-├── tests/                    # Test files
-├── requirements.txt          # Project dependencies
-└── README.md                # Project documentation
-```
-
 ## Setup and Installation
 
 1. Create a virtual environment:
