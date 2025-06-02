@@ -14,13 +14,69 @@ from src.analysis.main_analysis import IPLAnalyzer
 
 # Set page config
 st.set_page_config(
-    page_title="IPL Economic and Social Impact Analysis",
+    page_title="IPL Impact Analysis",
     page_icon="🏏",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# Initialize analyzer
-analyzer = IPLAnalyzer()
+# Custom CSS for modern look with better contrast
+st.markdown("""
+    <style>
+    .main {
+        padding: 2rem;
+        background-color: #f8f9fa;
+    }
+    .stMarkdown {
+        padding: 1rem 0;
+        color: #2c3e50;
+    }
+    .question-box {
+        background-color: #e9ecef;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        color: #2c3e50;
+        border-left: 5px solid #3498db;
+    }
+    .answer-box {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        border-left: 5px solid #3498db;
+        color: #2c3e50;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .metric-box {
+        background-color: #ffffff;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 0.5rem 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        color: #2c3e50;
+    }
+    .highlight {
+        color: #2980b9;
+        font-weight: bold;
+    }
+    h1, h2, h3, h4 {
+        color: #2c3e50 !important;
+    }
+    .stMetric {
+        background-color: #ffffff;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .stMetric [data-testid="stMetricValue"] {
+        color: #2980b9;
+    }
+    .stMetric [data-testid="stMetricLabel"] {
+        color: #2c3e50;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 def load_results():
     """Load analysis results."""
@@ -30,569 +86,414 @@ def load_results():
             return json.load(f)
     return None
 
-def create_balanced_scorecard():
-    """Create balanced scorecard for IPL advertisers."""
-    st.header("Balanced Scorecard for IPL Advertisers")
-    
-    # Load data
-    advertisers_df = pd.read_csv("results/advertisers_with_risk.csv")
-    
-    # Create metrics
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric(
-            "Average Health Risk Index",
-            f"{advertisers_df['health_risk_index'].mean():.1f}"
+def create_revenue_charts(revenue_data):
+    """Create basic revenue visualization charts."""
+    # Bar chart for revenue by source
+    fig_bar = go.Figure(data=[
+        go.Bar(
+            x=list(revenue_data['revenue_by_source'].keys()),
+            y=list(revenue_data['revenue_by_source'].values()),
+            text=[f'₹{v:,.0f} Cr' for v in revenue_data['revenue_by_source'].values()],
+            textposition='auto',
+            marker_color='#2980b9',
+            textfont=dict(color='#2c3e50', size=12)
         )
+    ])
     
-    with col2:
-        st.metric(
-            "Total Advertisers",
-            len(advertisers_df)
-        )
-    
-    with col3:
-        st.metric(
-            "High Risk Advertisers",
-            len(advertisers_df[advertisers_df['health_risk_index'] > 70])
-        )
-    
-    with col4:
-        st.metric(
-            "Advertising Ethics Index",
-            f"{analyzer.calculate_advertising_ethics_index():.1f}"
-        )
-    
-    # Create visualization
-    fig = px.scatter(
-        advertisers_df,
-        x='revenue_contribution',
-        y='health_risk_index',
-        color='product_type',
-        size='ad_frequency',
-        hover_data=['brand_name'],
-        title="Advertiser Risk vs Revenue Contribution"
+    fig_bar.update_layout(
+        title="Revenue by Source (2025)",
+        xaxis_title="Revenue Source",
+        yaxis_title="Revenue (Crores)",
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#2c3e50'),
+        xaxis=dict(tickangle=-45, tickfont=dict(color='#2c3e50')),
+        yaxis=dict(tickfont=dict(color='#2c3e50')),
+        titlefont=dict(color='#2c3e50', size=16)
     )
-    st.plotly_chart(fig, use_container_width=True)
+    
+    # Pie chart for revenue distribution
+    fig_pie = go.Figure(data=[go.Pie(
+        labels=list(revenue_data['revenue_percentage'].keys()),
+        values=list(revenue_data['revenue_percentage'].values()),
+        hole=.4,
+        marker=dict(colors=px.colors.qualitative.Set3),
+        textinfo='label+percent',
+        textposition='outside',
+        textfont=dict(color='#2c3e50', size=12)
+    )])
+    
+    fig_pie.update_layout(
+        title="Revenue Distribution by Source (2025)",
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#2c3e50'),
+        titlefont=dict(color='#2c3e50', size=16)
+    )
+    
+    return fig_bar, fig_pie
 
-def show_revenue_analysis():
-    """Show revenue analysis section."""
-    st.header("IPL Revenue Analysis")
+def create_health_risk_charts(df):
+    """Create basic health risk visualization charts."""
+    # Bar chart for top 10 risky brands
+    fig_bar = go.Figure(data=[
+        go.Bar(
+            x=df.head(10)['brand_name'],
+            y=df.head(10)['health_risk_index'],
+            text=df.head(10)['health_risk_index'].round(1),
+            textposition='auto',
+            marker_color='#c0392b',
+            textfont=dict(color='#2c3e50', size=12)
+        )
+    ])
     
-    # Add documentation
+    fig_bar.update_layout(
+        title="Top 10 Advertisers by Health Risk Index",
+        xaxis_title="Brand Name",
+        yaxis_title="Health Risk Index",
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#2c3e50'),
+        xaxis=dict(tickangle=-45, tickfont=dict(color='#2c3e50')),
+        yaxis=dict(tickfont=dict(color='#2c3e50')),
+        titlefont=dict(color='#2c3e50', size=16)
+    )
+    
+    # Histogram for risk distribution
+    fig_hist = go.Figure(data=[
+        go.Histogram(
+            x=df['health_risk_index'],
+            nbinsx=10,
+            marker_color='#27ae60',
+            textfont=dict(color='#2c3e50', size=12)
+        )
+    ])
+    
+    fig_hist.update_layout(
+        title="Distribution of Health Risk Scores",
+        xaxis_title="Health Risk Index",
+        yaxis_title="Number of Brands",
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#2c3e50'),
+        xaxis=dict(tickfont=dict(color='#2c3e50')),
+        yaxis=dict(tickfont=dict(color='#2c3e50')),
+        titlefont=dict(color='#2c3e50', size=16)
+    )
+    
+    return fig_bar, fig_hist
+
+def create_population_impact_charts(df):
+    """Create basic population impact visualization charts."""
+    # Box plot for risk scores
+    fig_box = go.Figure(data=[
+        go.Box(
+            y=df['health_risk_index'],
+            name="Health Risk Index",
+            marker_color='#8e44ad',
+            boxpoints='all',
+            jitter=0.3,
+            pointpos=-1.8,
+            textfont=dict(color='#2c3e50', size=12)
+        )
+    ])
+    
+    fig_box.update_layout(
+        title="Health Risk Score Distribution",
+        yaxis_title="Health Risk Index",
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#2c3e50'),
+        xaxis=dict(tickfont=dict(color='#2c3e50')),
+        yaxis=dict(tickfont=dict(color='#2c3e50')),
+        titlefont=dict(color='#2c3e50', size=16)
+    )
+    
+    # Scatter plot for risk vs product type
+    fig_scatter = go.Figure(data=[
+        go.Scatter(
+            x=df['product_type'],
+            y=df['health_risk_index'],
+            mode='markers',
+            marker=dict(
+                size=10,
+                color=df['health_risk_index'],
+                colorscale='RdYlGn_r',
+                showscale=True,
+                colorbar=dict(
+                    title="Risk Score",
+                    titleside="right",
+                    titlefont=dict(color='#2c3e50'),
+                    tickfont=dict(color='#2c3e50')
+                )
+            ),
+            text=df['brand_name'],
+            textposition="top center",
+            textfont=dict(color='#2c3e50', size=10)
+        )
+    ])
+    
+    fig_scatter.update_layout(
+        title="Health Risk by Product Type",
+        xaxis_title="Product Type",
+        yaxis_title="Health Risk Index",
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#2c3e50'),
+        xaxis=dict(tickangle=-45, tickfont=dict(color='#2c3e50')),
+        yaxis=dict(tickfont=dict(color='#2c3e50')),
+        titlefont=dict(color='#2c3e50', size=16)
+    )
+    
+    return fig_box, fig_scatter
+
+def create_celebrity_charts(df_celebrity):
+    """Create basic celebrity endorsement visualization charts."""
+    # Bar chart for celebrity endorsements
+    fig_bar = go.Figure(data=[
+        go.Bar(
+            x=df_celebrity['celebrity_name'],
+            y=df_celebrity['brand_count'],
+            text=df_celebrity['brand_count'],
+            textposition='auto',
+            marker_color='#d35400',
+            textfont=dict(color='#2c3e50', size=12)
+        )
+    ])
+    
+    fig_bar.update_layout(
+        title="Number of Brand Endorsements by Celebrity",
+        xaxis_title="Celebrity Name",
+        yaxis_title="Number of Endorsements",
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#2c3e50'),
+        xaxis=dict(tickangle=-45, tickfont=dict(color='#2c3e50')),
+        yaxis=dict(tickfont=dict(color='#2c3e50')),
+        titlefont=dict(color='#2c3e50', size=16)
+    )
+    
+    # Scatter plot for risk vs endorsements
+    fig_scatter = go.Figure(data=[
+        go.Scatter(
+            x=df_celebrity['brand_count'],
+            y=df_celebrity['health_risk_index'],
+            mode='markers+text',
+            marker=dict(
+                size=10,
+                color=df_celebrity['health_risk_index'],
+                colorscale='RdYlGn_r',
+                showscale=True,
+                colorbar=dict(
+                    title="Risk Score",
+                    titleside="right",
+                    titlefont=dict(color='#2c3e50'),
+                    tickfont=dict(color='#2c3e50')
+                )
+            ),
+            text=df_celebrity['celebrity_name'],
+            textposition="top center",
+            textfont=dict(color='#2c3e50', size=10)
+        )
+    ])
+    
+    fig_scatter.update_layout(
+        title="Celebrity Endorsements vs Risk Score",
+        xaxis_title="Number of Endorsements",
+        yaxis_title="Average Risk Score",
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#2c3e50'),
+        xaxis=dict(tickfont=dict(color='#2c3e50')),
+        yaxis=dict(tickfont=dict(color='#2c3e50')),
+        titlefont=dict(color='#2c3e50', size=16)
+    )
+    
+    return fig_bar, fig_scatter
+
+def main():
+    # Title and Introduction
     st.markdown("""
-    ### Understanding IPL Revenue
-    This section analyzes the revenue distribution of IPL for 2025 across different sources. The analysis includes:
-    - Total revenue from all sources
-    - Revenue distribution by source
-    - Top revenue contributors
-    - Average revenue per source
-    """)
+    <h1 style='color: #2c3e50;'>IPL Impact Analysis: Key Questions & Answers</h1>
+    """, unsafe_allow_html=True)
     
+    st.markdown("""
+    <p style='color: #2c3e50;'>
+    This analysis explores the economic and social impact of the Indian Premier League (IPL),
+    addressing key questions about revenue generation, health risks, and social implications.
+    </p>
+    """, unsafe_allow_html=True)
+    
+    # Load results
     results = load_results()
     if not results:
         st.error("No analysis results found. Please run the analysis first.")
         return
     
+    # Primary Questions Section
+    st.markdown("""
+    <h2 style='color: #2c3e50;'>Primary Questions</h2>
+    """, unsafe_allow_html=True)
+    
+    # Question 1: Revenue Generation
+    st.markdown("""
+    <div class="question-box">
+        <h3 style='color: #2c3e50;'>1. How much revenue does IPL generate and what are its main sources?</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
     revenue_data = results['central_contracts']
     
-    # Create a clean layout with two columns
-    col1, col2 = st.columns([2, 1])
+    # Create three columns for revenue metrics
+    col1, col2, col3 = st.columns(3)
     
     with col1:
-        # Create a more visually appealing pie chart
-        fig = go.Figure(data=[go.Pie(
-            labels=list(revenue_data['revenue_percentage'].keys()),
-            values=list(revenue_data['revenue_percentage'].values()),
-            hole=.4,
-            marker=dict(colors=px.colors.qualitative.Set3),
-            textinfo='label+percent',
-            textposition='outside'
-        )])
-        
-        fig.update_layout(
-            title="Revenue Distribution by Source (2025)",
-            showlegend=False,
-            height=500,
-            margin=dict(t=50, b=0, l=0, r=0)
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Add horizontal bar chart for better comparison
-        fig2 = px.bar(
-            x=list(revenue_data['revenue_by_source'].values()),
-            y=list(revenue_data['revenue_by_source'].keys()),
-            orientation='h',
-            title="Revenue by Source (in Crores)",
-            labels={'x': 'Revenue (₹ Crores)', 'y': 'Source'}
-        )
-        fig2.update_layout(height=400)
-        st.plotly_chart(fig2, use_container_width=True)
-    
-    with col2:
-        st.subheader("Key Metrics")
+        st.markdown('<div class="metric-box">', unsafe_allow_html=True)
         st.metric(
             "Total Revenue (2025)",
             f"₹{revenue_data['total_revenue']:,.0f} Cr",
             help="Total revenue from all sources in Crores"
         )
-        
-        # Calculate and display average revenue
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="metric-box">', unsafe_allow_html=True)
         avg_revenue = revenue_data['total_revenue'] / len(revenue_data['revenue_by_source'])
         st.metric(
             "Average Revenue per Source",
             f"₹{avg_revenue:,.0f} Cr",
             help="Average revenue contribution per source"
         )
-        
-        # Add top revenue sources
-        st.subheader("Top Revenue Sources")
-        top_sources = sorted(
-            revenue_data['revenue_by_source'].items(),
-            key=lambda x: x[1],
-            reverse=True
-        )[:3]
-        
-        for source, amount in top_sources:
-            st.metric(
-                source,
-                f"₹{amount:,.0f} Cr",
-                f"{revenue_data['revenue_percentage'][source]:.1f}%"
-            )
-    
-    # Add insights and recommendations
-    st.markdown("""
-    ### Key Insights
-    1. **Media Rights Domination**: 
-       - JioCinema and Star Sports together contribute over 92% of total revenue
-       - This shows the critical importance of broadcasting rights in IPL's revenue model
-    
-    2. **Revenue Concentration**:
-       - Top 3 sources account for 97% of total revenue
-       - High dependency on a few major revenue streams
-    
-    3. **Growth Opportunities**:
-       - Significant potential for growth in non-media revenue streams
-       - Opportunity to diversify revenue sources
-    
-    ### Recommendations
-    1. **Revenue Diversification**:
-       - Develop more non-media revenue streams
-       - Focus on increasing sponsorship and merchandise sales
-    
-    2. **Digital Expansion**:
-       - Strengthen digital presence and monetization
-       - Explore new digital revenue models
-    
-    3. **Strategic Partnerships**:
-       - Build long-term partnerships with current sponsors
-       - Explore new categories for sponsorship
-    """)
-
-def show_health_risk_analysis():
-    """Show health risk analysis section."""
-    st.header("Health and Social Risk Analysis")
-    
-    # Add documentation
-    st.markdown("""
-    ### Understanding Health Risk Analysis
-    This section analyzes the health and social risks associated with IPL advertisers. The analysis includes:
-    - Risk assessment of different product categories
-    - Distribution of advertisers by product type
-    - Detailed brand analysis with risk scores
-    - Celebrity influence on brand perception
-    
-    **Risk Categories:**
-    - Low Risk: Health Risk Index < 30
-    - Medium Risk: Health Risk Index 30-70
-    - High Risk: Health Risk Index > 70
-    """)
-    
-    results = load_results()
-    if not results:
-        st.error("No analysis results found. Please run the analysis first.")
-        return
-    
-    health_risk_data = results['health_risk']
-    if not health_risk_data:
-        st.warning("No health risk data available.")
-        return
-    
-    # Convert to DataFrame
-    df = pd.DataFrame(health_risk_data)
-    
-    # Create tabs for different views
-    tab1, tab2, tab3 = st.tabs(["Risk Analysis", "Product Categories", "Detailed View"])
-    
-    with tab1:
-        # Create bar chart for top risky advertisers with enhanced visualization
-        fig = px.bar(
-            df.head(10),
-            x='brand_name',
-            y='health_risk_index',
-            color='product_type',
-            title="Top 10 Advertisers by Health Risk Index",
-            labels={
-                'brand_name': 'Brand Name',
-                'health_risk_index': 'Health Risk Index',
-                'product_type': 'Product Type'
-            },
-            text='health_risk_index',  # Add value labels
-            color_discrete_sequence=px.colors.qualitative.Set3  # Use a more distinct color palette
-        )
-        
-        # Enhance the layout
-        fig.update_layout(
-            xaxis_tickangle=-45,
-            height=600,  # Increased height for better visibility
-            margin=dict(t=50, b=100, l=50, r=50),
-            showlegend=True,
-            legend_title="Product Type",
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            xaxis=dict(
-                title_font=dict(size=14),
-                tickfont=dict(size=12)
-            ),
-            yaxis=dict(
-                title_font=dict(size=14),
-                tickfont=dict(size=12),
-                gridcolor='lightgray'
-            ),
-            title=dict(
-                font=dict(size=20),
-                x=0.5,
-                y=0.95
-            )
-        )
-        
-        # Add risk level annotations
-        fig.add_shape(
-            type="rect",
-            xref="paper", yref="y",
-            x0=0, y0=70,
-            x1=1, y1=100,
-            fillcolor="red",
-            opacity=0.1,
-            layer="below",
-            line_width=0
-        )
-        
-        fig.add_shape(
-            type="rect",
-            xref="paper", yref="y",
-            x0=0, y0=30,
-            x1=1, y1=70,
-            fillcolor="yellow",
-            opacity=0.1,
-            layer="below",
-            line_width=0
-        )
-        
-        fig.add_shape(
-            type="rect",
-            xref="paper", yref="y",
-            x0=0, y0=0,
-            x1=1, y1=30,
-            fillcolor="green",
-            opacity=0.1,
-            layer="below",
-            line_width=0
-        )
-        
-        # Add risk level labels
-        fig.add_annotation(
-            xref="paper", yref="y",
-            x=0.02, y=85,
-            text="High Risk",
-            showarrow=False,
-            font=dict(color="red", size=12)
-        )
-        
-        fig.add_annotation(
-            xref="paper", yref="y",
-            x=0.02, y=50,
-            text="Medium Risk",
-            showarrow=False,
-            font=dict(color="orange", size=12)
-        )
-        
-        fig.add_annotation(
-            xref="paper", yref="y",
-            x=0.02, y=15,
-            text="Low Risk",
-            showarrow=False,
-            font=dict(color="green", size=12)
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Add explanation of the visualization
-        st.markdown("""
-        **Understanding the Health Risk Index:**
-        - **High Risk (>70)**: Products with significant health concerns
-        - **Medium Risk (30-70)**: Products with moderate health impact
-        - **Low Risk (<30)**: Products with minimal health concerns
-        
-        The chart shows the top 10 advertisers ranked by their health risk index, with color coding indicating product type.
-        """)
-    
-    with tab2:
-        # Show product type distribution
-        product_counts = df['product_type'].value_counts()
-        fig = px.pie(
-            values=product_counts.values,
-            names=product_counts.index,
-            title="Distribution of Advertisers by Product Type",
-            hole=0.4
-        )
-        fig.update_traces(textposition='inside', textinfo='percent+label')
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Add horizontal bar chart for product types
-        fig2 = px.bar(
-            x=product_counts.values,
-            y=product_counts.index,
-            orientation='h',
-            title="Number of Advertisers by Product Type",
-            labels={'x': 'Number of Advertisers', 'y': 'Product Type'}
-        )
-        st.plotly_chart(fig2, use_container_width=True)
-    
-    with tab3:
-        # Show detailed table with sorting and filtering
-        st.dataframe(
-            df[['brand_name', 'product_type', 'social_risk_description', 'celebrity_influence']],
-            use_container_width=True,
-            hide_index=True
-        )
-    
-    # Show detailed metrics
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric(
-            "Total Brands Analyzed",
-            len(df)
-        )
-    
-    with col2:
-        high_risk_brands = len(df[df['health_risk_index'] > 70])
-        st.metric(
-            "High Risk Brands",
-            high_risk_brands,
-            f"{high_risk_brands/len(df)*100:.1f}% of total"
-        )
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
+        st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+        top_source = max(revenue_data['revenue_by_source'].items(), key=lambda x: x[1])
         st.metric(
-            "Unique Product Types",
-            len(df['product_type'].unique())
+            "Top Revenue Source",
+            top_source[0],
+            f"₹{top_source[1]:,.0f} Cr"
         )
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    # Add insights and recommendations
+    # Create and display revenue charts
+    fig_bar, fig_pie = create_revenue_charts(revenue_data)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(fig_bar, use_container_width=True)
+    with col2:
+        st.plotly_chart(fig_pie, use_container_width=True)
+    
     st.markdown("""
-    ### Key Insights
-    1. **Product Category Distribution**:
-       - High concentration of FMCG and Fantasy Gaming advertisers
-       - Significant presence of Pan Masala/Mouth Freshener brands
+    <div class="answer-box">
+        <h4 style='color: #2c3e50;'>Answer:</h4>
+        <p style='color: #2c3e50;'>IPL generates substantial revenue primarily through media rights, with JioCinema and Star Sports 
+        contributing over 92% of total revenue. The analysis shows:</p>
+        <ul style='color: #2c3e50;'>
+            <li>Total revenue of <span class="highlight">₹{total_revenue:,.0f} Crores</span> for 2025</li>
+            <li>Average revenue of <span class="highlight">₹{avg_revenue:,.0f} Crores</span> per source</li>
+            <li>Media rights dominate with <span class="highlight">{media_percentage:.1f}%</span> of total revenue</li>
+            <li>Digital platforms (JioCinema) contribute <span class="highlight">{digital_percentage:.1f}%</span> of revenue</li>
+        </ul>
+    </div>
+    """.format(
+        total_revenue=revenue_data['total_revenue'],
+        avg_revenue=avg_revenue,
+        media_percentage=revenue_data['revenue_percentage'].get('JioCinema (Viacom18)', 0) + 
+                        revenue_data['revenue_percentage'].get('Star Sports', 0),
+        digital_percentage=revenue_data['revenue_percentage'].get('JioCinema (Viacom18)', 0)
+    ), unsafe_allow_html=True)
     
-    2. **Risk Patterns**:
-       - Fantasy Gaming shows highest risk due to gambling concerns
-       - Pan Masala brands pose health risks through surrogate advertising
-       - FMCG products show moderate risk levels
-    
-    3. **Celebrity Influence**:
-       - High celebrity involvement in risky product categories
-       - Strong correlation between celebrity influence and brand visibility
-    
-    ### Recommendations
-    1. **Policy Changes**:
-       - Implement stricter guidelines for surrogate advertising
-       - Review and update advertising policies for high-risk categories
-    
-    2. **Brand Selection**:
-       - Prioritize low-risk brands for sponsorship
-       - Implement risk assessment framework for new advertisers
-    
-    3. **Celebrity Guidelines**:
-       - Develop clear guidelines for celebrity endorsements
-       - Encourage responsible celebrity-brand associations
-    """)
-
-def show_population_impact():
-    """Show population impact analysis."""
-    st.header("Population Impact Analysis")
-    
-    # Add documentation
+    # Question 2: Health Risks
     st.markdown("""
-    ### Understanding Population Impact
-    This section analyzes the potential impact of IPL advertising on the population. The analysis includes:
-    - Distribution of health risk scores across brands
-    - Number of high-risk brands and their impact
-    - Risk categories and their definitions
-    - Overall risk assessment metrics
-    """)
+    <div class="question-box">
+        <h3 style='color: #2c3e50;'>2. What are the health risks associated with IPL advertising?</h3>
+    </div>
+    """, unsafe_allow_html=True)
     
-    results = load_results()
-    if not results:
-        st.error("No analysis results found. Please run the analysis first.")
-        return
+    health_risk_data = results['health_risk']
+    df = pd.DataFrame(health_risk_data)
+    
+    # Create and display health risk charts
+    fig_bar, fig_hist = create_health_risk_charts(df)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(fig_bar, use_container_width=True)
+    with col2:
+        st.plotly_chart(fig_hist, use_container_width=True)
+    
+    st.markdown("""
+    <div class="answer-box">
+        <h4 style='color: #2c3e50;'>Answer:</h4>
+        <p style='color: #2c3e50;'>The analysis reveals significant health risks in IPL advertising:</p>
+        <ul style='color: #2c3e50;'>
+            <li><span class="highlight">Fantasy Gaming and Pan Masala</span> brands show highest risk levels</li>
+            <li><span class="highlight">{high_risk_count}</span> brands fall into the high-risk category</li>
+            <li>Average risk score of <span class="highlight">{avg_risk:.1f}</span> across all advertisers</li>
+            <li>Key risk categories:
+                <ul>
+                    <li>Gambling and betting promotion</li>
+                    <li>Surrogate advertising for restricted products</li>
+                    <li>High sugar content in FMCG products</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    """.format(
+        high_risk_count=len(df[df['health_risk_index'] > 70]),
+        avg_risk=df['health_risk_index'].mean()
+    ), unsafe_allow_html=True)
+    
+    # Question 3: Population Impact
+    st.markdown("""
+    <div class="question-box">
+        <h3 style='color: #2c3e50;'>3. How does IPL advertising affect the population?</h3>
+    </div>
+    """, unsafe_allow_html=True)
     
     impact_data = results['population_impact']
-    health_risk_data = results['health_risk']
     
-    # Create tabs for different views
-    tab1, tab2 = st.tabs(["Impact Overview", "Risk Distribution"])
+    # Create and display population impact charts
+    fig_box, fig_scatter = create_population_impact_charts(df)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(fig_box, use_container_width=True)
+    with col2:
+        st.plotly_chart(fig_scatter, use_container_width=True)
     
-    with tab1:
-        # Create metrics
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric(
-                "Total Brands Analyzed",
-                len(health_risk_data)
-            )
-        
-        with col2:
-            high_risk_brands = len([brand for brand in health_risk_data if brand['health_risk_index'] > 70])
-            st.metric(
-                "High Risk Brands",
-                high_risk_brands,
-                f"{high_risk_brands/len(health_risk_data)*100:.1f}% of total"
-            )
-        
-        with col3:
-            # Convert average_risk_score to float if it's a string
-            try:
-                avg_risk = float(impact_data['average_risk_score'])
-                risk_display = f"{avg_risk:.1f}"
-            except (ValueError, TypeError):
-                risk_display = "N/A"
-            
-            st.metric(
-                "Average Risk Score",
-                risk_display
-            )
-    
-    with tab2:
-        # Create risk distribution chart
-        df = pd.DataFrame(health_risk_data)
-        
-        # Convert health_risk_index to numeric if it's not already
-        df['health_risk_index'] = pd.to_numeric(df['health_risk_index'], errors='coerce')
-        
-        # Create histogram
-        fig = px.histogram(
-            df,
-            x='health_risk_index',
-            nbins=10,
-            title="Distribution of Health Risk Scores",
-            labels={'health_risk_index': 'Health Risk Index', 'count': 'Number of Brands'},
-            color_discrete_sequence=['#2ecc71']
-        )
-        fig.update_layout(
-            xaxis_title="Health Risk Index",
-            yaxis_title="Number of Brands",
-            showlegend=False
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Add box plot for risk distribution
-        fig2 = px.box(
-            df,
-            y='health_risk_index',
-            title="Health Risk Score Distribution",
-            labels={'health_risk_index': 'Health Risk Index'}
-        )
-        st.plotly_chart(fig2, use_container_width=True)
-    
-    # Show risk categories
-    st.subheader("Risk Categories")
-    risk_categories = {
-        "Low Risk": "Health Risk Index < 30",
-        "Medium Risk": "Health Risk Index 30-70",
-        "High Risk": "Health Risk Index > 70"
-    }
-    
-    for category, description in risk_categories.items():
-        st.info(f"**{category}**: {description}")
-    
-    # Add summary statistics
-    st.subheader("Summary Statistics")
-    if not df['health_risk_index'].empty:
-        stats = df['health_risk_index'].describe()
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("Minimum Risk", f"{stats['min']:.1f}")
-        with col2:
-            st.metric("Average Risk", f"{stats['mean']:.1f}")
-        with col3:
-            st.metric("Median Risk", f"{stats['50%']:.1f}")
-        with col4:
-            st.metric("Maximum Risk", f"{stats['max']:.1f}")
-    
-    # Add insights and recommendations
     st.markdown("""
-    ### Key Insights
-    1. **Risk Distribution**:
-       - Wide range of risk scores across different brands
-       - Significant number of brands in high-risk category
-       - Clear correlation between product type and risk level
+    <div class="answer-box">
+        <h4 style='color: #2c3e50;'>Answer:</h4>
+        <p style='color: #2c3e50;'>The population impact analysis shows:</p>
+        <ul style='color: #2c3e50;'>
+            <li>Wide range of risk scores across different brands</li>
+            <li>Significant number of high-risk brands targeting similar demographics</li>
+            <li>Clear correlation between product type and risk level</li>
+            <li>Key demographic impacts:
+                <ul>
+                    <li>Youth exposure to gambling and betting</li>
+                    <li>Children's exposure to high-sugar products</li>
+                    <li>General population exposure to surrogate advertising</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
     
-    2. **Impact Assessment**:
-       - High-risk brands have significant market presence
-       - Multiple brands targeting similar demographics
-       - Cumulative effect of multiple high-risk advertisers
-    
-    3. **Market Dynamics**:
-       - Strong presence of surrogate advertising
-       - High concentration of risky products in certain categories
-       - Need for better risk management
-    
-    ### Recommendations
-    1. **Regulatory Framework**:
-       - Implement stricter advertising guidelines
-       - Regular monitoring of surrogate advertising
-       - Clear categorization of high-risk products
-    
-    2. **Brand Management**:
-       - Develop risk mitigation strategies
-       - Regular risk assessment of advertisers
-       - Balance between revenue and social responsibility
-    
-    3. **Consumer Protection**:
-       - Enhanced disclosure requirements
-       - Clear labeling of high-risk products
-       - Public awareness campaigns
-    """)
-
-def show_celebrity_endorsements():
-    """Show celebrity endorsement analysis."""
-    st.header("Celebrity Endorsement Analysis")
-    
-    # Add documentation
+    # Question 4: Celebrity Impact
     st.markdown("""
-    ### Understanding Celebrity Endorsements
-    This section analyzes the relationship between celebrities and brand endorsements. The analysis includes:
-    - Top celebrities by number of brand endorsements
-    - Brands with the most celebrity endorsements
-    - Risk assessment of celebrity-endorsed brands
-    - Impact of celebrity influence on brand perception
-    """)
-    
-    results = load_results()
-    if not results:
-        st.error("No analysis results found. Please run the analysis first.")
-        return
-    
-    health_risk_data = results['health_risk']
-    if not health_risk_data:
-        st.info("No celebrity endorsement data available.")
-        return
+    <div class="question-box">
+        <h3 style='color: #2c3e50;'>4. How do celebrity endorsements affect brand perception?</h3>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Process celebrity data
     celebrity_data = []
@@ -607,269 +508,97 @@ def show_celebrity_endorsements():
                     'health_risk_index': brand['health_risk_index']
                 })
     
-    if not celebrity_data:
-        st.info("No celebrity endorsement data available.")
-        return
-    
-    df = pd.DataFrame(celebrity_data)
-    
-    # Create tabs for different views
-    tab1, tab2, tab3 = st.tabs(["Celebrity Analysis", "Brand Analysis", "Risk Analysis"])
-    
-    with tab1:
-        # Count endorsements per celebrity
-        celebrity_counts = df['celebrity_name'].value_counts().reset_index()
+    if celebrity_data:
+        df_celebrity = pd.DataFrame(celebrity_data)
+        celebrity_counts = df_celebrity['celebrity_name'].value_counts().reset_index()
         celebrity_counts.columns = ['celebrity_name', 'brand_count']
         
         # Calculate average risk per celebrity
-        avg_risk = df.groupby('celebrity_name')['health_risk_index'].mean().reset_index()
+        avg_risk = df_celebrity.groupby('celebrity_name')['health_risk_index'].mean().reset_index()
         celebrity_counts = celebrity_counts.merge(avg_risk, on='celebrity_name')
         
-        # Create visualization
-        fig = px.bar(
-            celebrity_counts.head(10),
-            x='celebrity_name',
-            y='brand_count',
-            color='health_risk_index',
-            title="Top 10 Celebrities by Number of Brand Endorsements",
-            labels={
-                'celebrity_name': 'Celebrity',
-                'brand_count': 'Number of Brands',
-                'health_risk_index': 'Average Risk Score'
-            }
-        )
-        
-        fig.update_layout(
-            xaxis_tickangle=-45,
-            height=500,
-            margin=dict(t=50, b=100, l=50, r=50)
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        # Create and display celebrity charts
+        fig_bar, fig_scatter = create_celebrity_charts(celebrity_counts)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(fig_bar, use_container_width=True)
+        with col2:
+            st.plotly_chart(fig_scatter, use_container_width=True)
     
-    with tab2:
-        # Show brand distribution
-        brand_counts = df['brand_name'].value_counts().reset_index()
-        brand_counts.columns = ['brand_name', 'celebrity_count']
-        
-        fig = px.bar(
-            brand_counts.head(10),
-            x='brand_name',
-            y='celebrity_count',
-            title="Top 10 Brands by Number of Celebrity Endorsements",
-            labels={
-                'brand_name': 'Brand',
-                'celebrity_count': 'Number of Celebrities'
-            }
-        )
-        
-        fig.update_layout(
-            xaxis_tickangle=-45,
-            height=500,
-            margin=dict(t=50, b=100, l=50, r=50)
-        )
-        st.plotly_chart(fig, use_container_width=True)
+    st.markdown("""
+    <div class="answer-box">
+        <h4 style='color: #2c3e50;'>Answer:</h4>
+        <p style='color: #2c3e50;'>The celebrity endorsement analysis reveals:</p>
+        <ul style='color: #2c3e50;'>
+            <li>Strong correlation between celebrity influence and brand risk</li>
+            <li>High concentration of endorsements among top celebrities</li>
+            <li>Multiple endorsements per celebrity common in high-risk categories</li>
+            <li>Key findings:
+                <ul>
+                    <li>Top celebrities endorsing high-risk products</li>
+                    <li>Multiple brand associations per celebrity</li>
+                    <li>Impact on brand perception and consumer trust</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
     
-    with tab3:
-        # Enhanced scatter plot for celebrity endorsements vs risk score
-        fig = px.scatter(
-            celebrity_counts,
-            x='brand_count',
-            y='health_risk_index',
-            hover_data=['celebrity_name'],
-            title="Celebrity Endorsements vs Risk Score",
-            labels={
-                'brand_count': 'Number of Brand Endorsements',
-                'health_risk_index': 'Average Risk Score'
-            },
-            color='health_risk_index',  # Color by risk score
-            size='brand_count',  # Size by number of endorsements
-            color_continuous_scale='RdYlGn_r',  # Red to green color scale
-            size_max=20  # Maximum bubble size
-        )
-        
-        # Enhance the layout
-        fig.update_layout(
-            height=600,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            xaxis=dict(
-                title_font=dict(size=14),
-                tickfont=dict(size=12),
-                gridcolor='lightgray'
-            ),
-            yaxis=dict(
-                title_font=dict(size=14),
-                tickfont=dict(size=12),
-                gridcolor='lightgray'
-            ),
-            title=dict(
-                font=dict(size=20),
-                x=0.5,
-                y=0.95
-            ),
-            coloraxis_colorbar=dict(
-                title="Risk Score",
-                titleside="right"
-            )
-        )
-        
-        # Add risk level annotations
-        fig.add_shape(
-            type="rect",
-            xref="paper", yref="y",
-            x0=0, y0=70,
-            x1=1, y1=100,
-            fillcolor="red",
-            opacity=0.1,
-            layer="below",
-            line_width=0
-        )
-        
-        fig.add_shape(
-            type="rect",
-            xref="paper", yref="y",
-            x0=0, y0=30,
-            x1=1, y1=70,
-            fillcolor="yellow",
-            opacity=0.1,
-            layer="below",
-            line_width=0
-        )
-        
-        fig.add_shape(
-            type="rect",
-            xref="paper", yref="y",
-            x0=0, y0=0,
-            x1=1, y1=30,
-            fillcolor="green",
-            opacity=0.1,
-            layer="below",
-            line_width=0
-        )
-        
-        # Add risk level labels
-        fig.add_annotation(
-            xref="paper", yref="y",
-            x=0.02, y=85,
-            text="High Risk",
-            showarrow=False,
-            font=dict(color="red", size=12)
-        )
-        
-        fig.add_annotation(
-            xref="paper", yref="y",
-            x=0.02, y=50,
-            text="Medium Risk",
-            showarrow=False,
-            font=dict(color="orange", size=12)
-        )
-        
-        fig.add_annotation(
-            xref="paper", yref="y",
-            x=0.02, y=15,
-            text="Low Risk",
-            showarrow=False,
-            font=dict(color="green", size=12)
-        )
-        
-        # Add trend line
-        fig.add_traces(
-            px.scatter(
-                celebrity_counts,
-                x='brand_count',
-                y='health_risk_index',
-                trendline="ols"
-            ).data[1]
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Add explanation of the visualization
-        st.markdown("""
-        **Understanding the Celebrity Endorsement Analysis:**
-        - **Bubble Size**: Represents the number of brand endorsements
-        - **Color**: Indicates the average risk score (red = high risk, green = low risk)
-        - **Trend Line**: Shows the relationship between number of endorsements and risk score
-        
-        The scatter plot helps identify patterns in celebrity endorsements and their association with brand risk levels.
-        """)
+    # Recommendations Section
+    st.markdown("""
+    <h2 style='color: #2c3e50;'>Recommendations</h2>
+    """, unsafe_allow_html=True)
     
-    # Show detailed metrics
-    col1, col2, col3 = st.columns(3)
+    # Create four columns for recommendations
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric(
-            "Total Celebrities",
-            len(df['celebrity_name'].unique())
-        )
+        st.markdown("""
+        <div class="metric-box">
+            <h4 style='color: #2c3e50;'>Revenue Diversification</h4>
+            <ul style='color: #2c3e50;'>
+                <li>Develop non-media revenue streams</li>
+                <li>Focus on sponsorship growth</li>
+                <li>Explore digital monetization</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        st.metric(
-            "Total Brands",
-            len(df['brand_name'].unique())
-        )
+        st.markdown("""
+        <div class="metric-box">
+            <h4 style='color: #2c3e50;'>Health Risk Management</h4>
+            <ul style='color: #2c3e50;'>
+                <li>Implement stricter guidelines</li>
+                <li>Monitor surrogate advertising</li>
+                <li>Categorize high-risk products</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        st.metric(
-            "Average Risk Score",
-            f"{df['health_risk_index'].mean():.1f}"
-        )
+        st.markdown("""
+        <div class="metric-box">
+            <h4 style='color: #2c3e50;'>Celebrity Guidelines</h4>
+            <ul style='color: #2c3e50;'>
+                <li>Develop endorsement policies</li>
+                <li>Assess brand-celebrity fit</li>
+                <li>Promote responsible choices</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Add insights and recommendations
-    st.markdown("""
-    ### Key Insights
-    1. **Celebrity-Brand Relationships**:
-       - High concentration of endorsements among top celebrities
-       - Strong correlation between celebrity popularity and brand risk
-       - Multiple endorsements per celebrity common
-    
-    2. **Risk Patterns**:
-       - Celebrities often endorse multiple high-risk brands
-       - Clear relationship between celebrity influence and brand risk
-       - Need for better risk assessment in celebrity selection
-    
-    3. **Market Impact**:
-       - Celebrity endorsements significantly impact brand visibility
-       - High-risk brands leverage celebrity influence
-       - Need for responsible celebrity-brand associations
-    
-    ### Recommendations
-    1. **Celebrity Guidelines**:
-       - Develop clear guidelines for celebrity endorsements
-       - Implement risk assessment for celebrity-brand partnerships
-       - Encourage responsible celebrity choices
-    
-    2. **Brand Strategy**:
-       - Balance celebrity influence with brand risk
-       - Focus on long-term brand health over short-term gains
-       - Develop alternative marketing strategies
-    
-    3. **Industry Standards**:
-       - Create industry-wide guidelines for celebrity endorsements
-       - Regular monitoring of celebrity-brand associations
-       - Public awareness about responsible endorsements
-    """)
-
-def main():
-    st.title("IPL Economic and Social Impact Analysis")
-    
-    # Create sidebar navigation
-    st.sidebar.title("Navigation")
-    page = st.sidebar.radio(
-        "Go to",
-        ["Revenue Analysis", "Health Risk Analysis", 
-         "Population Impact", "Celebrity Endorsements"]
-    )
-    
-    # Show selected page
-    if page == "Revenue Analysis":
-        show_revenue_analysis()
-    elif page == "Health Risk Analysis":
-        show_health_risk_analysis()
-    elif page == "Population Impact":
-        show_population_impact()
-    elif page == "Celebrity Endorsements":
-        show_celebrity_endorsements()
+    with col4:
+        st.markdown("""
+        <div class="metric-box">
+            <h4 style='color: #2c3e50;'>Consumer Protection</h4>
+            <ul style='color: #2c3e50;'>
+                <li>Enhance disclosures</li>
+                <li>Improve labeling</li>
+                <li>Increase awareness</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main() 
